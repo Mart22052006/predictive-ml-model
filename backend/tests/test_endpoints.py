@@ -1,4 +1,4 @@
-"""Тесты эндпоинтов из задачи #29: статус, история, прогноз, алерты (+ базовые equipment и predict)."""
+import itertools
 from datetime import datetime
 
 from fastapi.testclient import TestClient
@@ -9,10 +9,9 @@ STATUSES = {"normal", "warning", "critical"}
 
 
 def _ts(s: str) -> datetime:
-    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    return datetime.fromisoformat(s)
 
 
-# ---------- /equipment ----------
 def test_list_equipment():
     r = client.get("/equipment")
     assert r.status_code == 200
@@ -28,7 +27,6 @@ def test_get_equipment_and_404():
     assert r.status_code == 404 and "9999" in r.json()["detail"]
 
 
-# ---------- /equipment/{id}/status ----------
 def test_status_fields_and_ranges():
     s = client.get("/equipment/1/status").json()
     assert {"equipment_id", "status", "current_cycle", "predicted_rul",
@@ -49,13 +47,12 @@ def test_status_404():
     assert client.get("/equipment/9999/status").status_code == 404
 
 
-# ---------- /equipment/{id}/history ----------
 def test_history_ascending_with_14_sensors():
     rows = client.get("/equipment/1/history").json()
     cycles = [r["cycle"] for r in rows]
     assert cycles == sorted(cycles) and len(set(cycles)) == len(cycles)
     assert len(rows[0]["sensors"]) == 14
-    assert "s1" not in rows[0]["sensors"]  # константные датчики не отдаём
+    assert "s1" not in rows[0]["sensors"]  
 
 
 def test_history_limit_returns_latest():
@@ -79,7 +76,6 @@ def test_history_404():
     assert client.get("/equipment/9999/history").status_code == 404
 
 
-# ---------- /equipment/{id}/forecast ----------
 def test_forecast_shape():
     f = client.get("/equipment/1/forecast").json()
     pts = f["points"]
@@ -91,7 +87,7 @@ def test_forecast_shape():
 def test_forecast_rul_decreases_and_stays_non_negative():
     pts = client.get("/equipment/1/forecast").json()["points"]
     ruls = [p["rul"] for p in pts]
-    assert all(a >= b for a, b in zip(ruls, ruls[1:]))
+    assert all(a >= b for a, b in itertools.pairwise(ruls))
     assert all(p["rul"] >= 0 and p["rul_low"] >= 0 for p in pts)
 
 
@@ -110,7 +106,6 @@ def test_forecast_404():
     assert client.get("/equipment/9999/forecast").status_code == 404
 
 
-# ---------- /alerts ----------
 def test_alerts_newest_first():
     alerts = client.get("/alerts").json()
     assert len(alerts) > 0
@@ -134,7 +129,6 @@ def test_alerts_by_unknown_equipment_404():
     assert client.get("/alerts/9999").status_code == 404
 
 
-# ---------- /predict ----------
 def test_predict():
     r = client.post("/predict", json={"equipment_id": 1})
     assert r.status_code == 200 and r.json()["equipment_id"] == 1

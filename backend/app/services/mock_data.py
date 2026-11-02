@@ -1,5 +1,5 @@
 import random
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.core.config import RUL_CLIP, RUL_CRITICAL, RUL_WARNING
 
