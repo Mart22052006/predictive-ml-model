@@ -41,7 +41,7 @@ def get_forecast(equipment_id: int) -> dict | None:
     horizon = round(rul)
     points = []
     for k in range(horizon + 1):
-        value, spread = rul - k, 2 + 0.12 * k  # неопределённость растёт с горизонтом
+        value, spread = rul - k, 2 + 0.12 * k
         points.append({"cycle": cycle + k, "rul": round(value, 1),
                        "rul_low": round(max(0.0, value - spread), 1), "rul_high": round(value + spread, 1)})
     return {"equipment_id": equipment_id, "current_cycle": cycle, "predicted_rul": rul,
