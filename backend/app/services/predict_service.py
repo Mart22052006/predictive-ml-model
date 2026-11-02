@@ -3,7 +3,6 @@ from app.services.mock_data import EQUIPMENT, noisy_rul, status_from_rul
 
 
 def run_prediction(equipment_id: int) -> dict | None:
-    """Ручной инференс. Сейчас — заглушка; здесь будет вызов модели (XGBoost / PyTorch)."""
     e = EQUIPMENT.get(equipment_id)
     if e is None:
         return None

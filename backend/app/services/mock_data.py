@@ -1,11 +1,8 @@
-"""Временный источник данных в памяти (пока нет БД). Данные похожи на FD001.
-Когда появится PostgreSQL — сервисы начнут читать из БД, а этот файл можно удалить."""
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.core.config import RUL_CLIP, RUL_CRITICAL, RUL_WARNING
 
-# 14 рабочих датчиков FD001: код -> (базовое значение, std, тренд при износе)
 SENSORS = {
     "s2": (641.82, 0.50, 1), "s3": (1589.70, 6.13, 1), "s4": (1400.60, 9.00, 1),
     "s7": (554.36, 0.89, -1), "s8": (2388.06, 0.07, 1), "s9": (9046.19, 22.08, 1),
@@ -30,12 +27,11 @@ def status_from_rul(rul: float) -> str:
 
 
 def noisy_rul(true_rul: float) -> float:
-    """Имитация ответа модели: истинный RUL + шум."""
     return round(min(max(min(true_rul, RUL_CLIP) + _rnd.gauss(0, 4), 0), RUL_CLIP), 1)
 
 
 def _build() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for i in range(1, 13):
         life = _rnd.randint(130, 300)                  # цикл отказа
         cut = int(life * _rnd.uniform(0.35, 0.97))     # текущий цикл

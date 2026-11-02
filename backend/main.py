@@ -1,8 +1,7 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 from app.api import alerts, equipment, predict
 from app.core.config import CORS_ORIGINS
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="OFF-Tech: оценка состояния оборудования", version="0.1.0")
 
