@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 Status = Literal["normal", "warning", "critical"]
 
@@ -12,33 +12,33 @@ class EquipmentOut(BaseModel):
     unit_number: int
     current_cycle: int
     status: Status
-    predicted_rul: float
+    predicted_rul: float = Field(description="Прогноз остаточного ресурса, циклов")
 
 
 class StatusOut(BaseModel):
     equipment_id: int
-    status: Status
+    status: Status = Field(description="normal: RUL > 75, warning: 31–75, critical: ≤ 30 циклов")
     current_cycle: int
-    predicted_rul: float
-    defect_probability: float
-    residual: float
+    predicted_rul: float = Field(description="Прогноз остаточного ресурса, циклов")
+    defect_probability: float = Field(ge=0, le=1, description="Вероятность дефекта, 0–1")
+    residual: float = Field(description="Невязка: отклонение от физически ожидаемого поведения")
 
 
 class ReadingOut(BaseModel):
     cycle: int
-    sensors: dict[str, float]
+    sensors: dict[str, float] = Field(description="Показания 14 рабочих датчиков: код → значение")
 
 
 class ForecastPoint(BaseModel):
     cycle: int
-    rul: float
-    rul_low: float
-    rul_high: float
+    rul: float = Field(description="Ожидаемый остаточный ресурс на этом цикле")
+    rul_low: float = Field(description="Нижняя граница доверительного интервала")
+    rul_high: float = Field(description="Верхняя граница доверительного интервала")
 
 
 class ForecastOut(BaseModel):
     equipment_id: int
     current_cycle: int
     predicted_rul: float
-    predicted_failure_cycle: int
-    points: list[ForecastPoint]
+    predicted_failure_cycle: int = Field(description="Цикл, на котором ожидается отказ")
+    points: list[ForecastPoint] = Field(description="От текущего цикла до ожидаемого отказа, шаг — 1 цикл")

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
+from app.core.errors import NOT_FOUND, equipment_not_found
 from app.schemas.equipment import StatusOut
 from app.schemas.predict import PredictIn
 from app.services import predict_service
@@ -7,9 +8,9 @@ from app.services import predict_service
 router = APIRouter(prefix="/predict", tags=["Прогнозирование"])
 
 
-@router.post("", response_model=StatusOut, summary="Ручной запрос инференса")
+@router.post("", response_model=StatusOut, responses=NOT_FOUND, summary="Ручной запрос инференса")
 def predict(body: PredictIn):
     result = predict_service.run_prediction(body.equipment_id)
     if result is None:
-        raise HTTPException(status_code=404, detail="Оборудование не найдено")
+        raise equipment_not_found(body.equipment_id)
     return result

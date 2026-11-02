@@ -1,14 +1,15 @@
 from fastapi import APIRouter, HTTPException, Query
 
+from app.core.errors import NOT_FOUND, equipment_not_found
 from app.schemas.equipment import EquipmentOut, ForecastOut, ReadingOut, StatusOut
 from app.services import equipment_service
 
 router = APIRouter(prefix="/equipment", tags=["Оборудование"])
 
 
-def _or_404(value):
+def _found(value, equipment_id: int):
     if value is None:
-        raise HTTPException(status_code=404, detail="Оборудование не найдено")
+        raise equipment_not_found(equipment_id)
     return value
 
 
@@ -17,25 +18,30 @@ def list_equipment():
     return equipment_service.list_equipment()
 
 
-@router.get("/{equipment_id}", response_model=EquipmentOut, summary="Информация об одной единице")
+@router.get("/{equipment_id}", response_model=EquipmentOut, responses=NOT_FOUND,
+            summary="Информация об одной единице")
 def get_equipment(equipment_id: int):
-    return _or_404(equipment_service.get_equipment(equipment_id))
+    return _found(equipment_service.get_equipment(equipment_id), equipment_id)
 
 
-@router.get("/{equipment_id}/status", response_model=StatusOut, summary="Текущее состояние")
+@router.get("/{equipment_id}/status", response_model=StatusOut, responses=NOT_FOUND,
+            summary="Текущее состояние: статус, RUL, вероятность дефекта, невязка")
 def get_status(equipment_id: int):
-    return _or_404(equipment_service.get_status(equipment_id))
+    return _found(equipment_service.get_status(equipment_id), equipment_id)
 
 
-@router.get("/{equipment_id}/history", response_model=list[ReadingOut],
-            summary="История показаний датчиков")
+@router.get("/{equipment_id}/history", response_model=list[ReadingOut], responses=NOT_FOUND,
+            summary="История показаний датчиков за период")
 def get_history(equipment_id: int,
-                from_cycle: int | None = Query(None, ge=0),
-                to_cycle: int | None = Query(None, ge=0),
-                limit: int = Query(500, ge=1, le=5000)):
-    return _or_404(equipment_service.get_history(equipment_id, from_cycle, to_cycle, limit))
+                from_cycle: int | None = Query(None, ge=0, description="С какого цикла (включительно)"),
+                to_cycle: int | None = Query(None, ge=0, description="По какой цикл (включительно)"),
+                limit: int = Query(500, ge=1, le=5000, description="Максимум записей (берутся последние)")):
+    if from_cycle is not None and to_cycle is not None and from_cycle > to_cycle:
+        raise HTTPException(status_code=400, detail="from_cycle не может быть больше to_cycle")
+    return _found(equipment_service.get_history(equipment_id, from_cycle, to_cycle, limit), equipment_id)
 
 
-@router.get("/{equipment_id}/forecast", response_model=ForecastOut, summary="Прогноз деградации")
+@router.get("/{equipment_id}/forecast", response_model=ForecastOut, responses=NOT_FOUND,
+            summary="Прогноз деградации: RUL по будущим циклам с доверительным интервалом")
 def get_forecast(equipment_id: int):
-    return _or_404(equipment_service.get_forecast(equipment_id))
+    return _found(equipment_service.get_forecast(equipment_id), equipment_id)

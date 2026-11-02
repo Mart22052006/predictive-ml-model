@@ -1,5 +1,5 @@
 import random
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 from app.core.config import RUL_CLIP, RUL_CRITICAL, RUL_WARNING
 
@@ -34,7 +34,7 @@ def _build() -> None:
     now = datetime.now(UTC)
     for i in range(1, 13):
         life = _rnd.randint(130, 300)                  
-        cut = int(life * _rnd.uniform(0.35, 0.97))     
+        cut = int(life * _rnd.uniform(0.35, 0.97))    
         READINGS[i] = [
             {"cycle": c, "sensors": {
                 code: round(base + trend * std * 3 * (c / life) ** 2 + _rnd.gauss(0, std * 0.4), 4)
