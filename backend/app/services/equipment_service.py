@@ -38,10 +38,10 @@ def get_forecast(equipment_id: int) -> dict | None:
     if e is None:
         return None
     rul, cycle = e["predicted_rul"], e["current_cycle"]
-    horizon = round(rul)
+    horizon = int(rul) 
     points = []
     for k in range(horizon + 1):
-        value, spread = rul - k, 2 + 0.12 * k
+        value, spread = rul - k, 2 + 0.12 * k  
         points.append({"cycle": cycle + k, "rul": round(value, 1),
                        "rul_low": round(max(0.0, value - spread), 1), "rul_high": round(value + spread, 1)})
     return {"equipment_id": equipment_id, "current_cycle": cycle, "predicted_rul": rul,
