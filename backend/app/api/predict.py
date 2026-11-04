@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.core.db import DB
 from app.core.errors import NOT_FOUND, equipment_not_found
 from app.schemas.equipment import StatusOut
 from app.schemas.predict import PredictIn
@@ -9,8 +10,8 @@ router = APIRouter(prefix="/predict", tags=["Прогнозирование"])
 
 
 @router.post("", response_model=StatusOut, responses=NOT_FOUND, summary="Ручной запрос инференса")
-def predict(body: PredictIn):
-    result = predict_service.run_prediction(body.equipment_id)
+def predict(body: PredictIn, db: DB):
+    result = predict_service.run_prediction(db, body.equipment_id)
     if result is None:
         raise equipment_not_found(body.equipment_id)
     return result
