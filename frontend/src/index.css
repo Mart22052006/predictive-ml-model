@@ -237,3 +237,14 @@ h2 {
     align-items: flex-start;
   }
 }
+
+.row-link {
+  cursor: pointer;
+}
+.row-link:hover td {
+  background: #eff6ff;
+}
+.row-link .name {
+  color: #2563eb;
+  font-weight: 500;
+}
