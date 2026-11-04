@@ -22,6 +22,7 @@ class Alert(Base):
     triggered_at = Column(DateTime, nullable = False, server_default=func.now())
     severity = Column(Text, nullable=False)
     message = Column(Text, nullable=False)
+    sent_at = Column(DateTime, nullable=True)
 
     __table_args__ = (Index("ix_alerts_equipment_triggered", equipment_id, triggered_at.desc()),)
 

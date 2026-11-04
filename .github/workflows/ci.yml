@@ -115,6 +115,9 @@ jobs:
       MODEL_PATH: /tmp/model.json
       SIMULATOR_WAIT_TIME: "0"
       WORKER_POLL_INTERVAL: "5"
+      RUL_WARNING: 75
+      RUL_CRITICAL: 30
+      RUL_CLIP: 125
 
     steps:
       - uses: actions/checkout@v4
