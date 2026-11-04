@@ -35,6 +35,7 @@ def _latest_predictions(db: Connection, equipment_id: int | None = None) -> list
             Equipment.name,
             Equipment.type,
             Equipment.unit_number,
+            Equipment.last_maintenance_date,
             MlPrediction.cycle.label("current_cycle"),
             MlPrediction.predicted_rul,
             MlPrediction.defect_probability,
@@ -64,7 +65,8 @@ def _latest_predictions(db: Connection, equipment_id: int | None = None) -> list
 
 
 def _to_equipment_out(item: dict) -> dict:
-    keys = ("id", "name", "type", "unit_number", "current_cycle", "status", "predicted_rul")
+    keys = ("id", "name", "type", "unit_number", "last_maintenance_date",
+            "current_cycle", "status", "predicted_rul")
     return {k: item[k] for k in keys}
 
 

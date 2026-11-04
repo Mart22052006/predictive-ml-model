@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -10,6 +11,7 @@ class EquipmentOut(BaseModel):
     name: str
     type: str
     unit_number: int
+    last_maintenance_date: date | None = Field(None, description="Дата последнего обслуживания")
     current_cycle: int
     status: Status
     predicted_rul: float = Field(description="Прогноз остаточного ресурса, циклов")
