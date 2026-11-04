@@ -22,7 +22,7 @@ def format_message(alert: Alert) -> str:
     return (f"{emoji} {alert.title} \n"
             f"{alert.message}\n")
 
-async def send_telegram_alert(bot_token: str, chat_id: str, alert: Alert):
+async def send_telegram_alert(bot_token: str, chat_id: str, alert: Alert) -> bool:
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         "chat_id": chat_id,
@@ -40,21 +40,28 @@ async def send_telegram_alert(bot_token: str, chat_id: str, alert: Alert):
                 if r.status_code==200:
                     logger.info(f"SENT {alert.severity.upper()} {alert.title}")
                     circuit_breaker.set_closed()
+                    return True
 
     except httpx.HTTPStatusError as e:
         if e.response.is_client_error and e.response.status_code != 429:
             logger.error(f"error code: {e.response.status_code}, error text {e.response.text}")
             circuit_breaker.set_closed()
+            return False
 
         elif e.response.is_server_error or e.response.status_code == 429:
             circuit_breaker.check_half_open()
             circuit_breaker.errors_counter()
             logger.error(f"error code: {e.response.status_code}, error text {e.response.text}")
+            return False
         else:
              logger.error(f"error code: {e.response.status_code}, error text {e.response.text}")
+             return False
 
     except httpx.TransportError as e:
             circuit_breaker.check_half_open()
             circuit_breaker.errors_counter()
             logger.error(f"transport error {type(e).__name__}")
+            return False
+
+    return False
 
