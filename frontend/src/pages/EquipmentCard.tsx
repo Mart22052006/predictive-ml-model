@@ -76,8 +76,8 @@ export function EquipmentCard() {
       {recalcError && <ErrorMessage message={recalcError} />}
 
       <div className="grid">
-        <HistoryChart id={id} />
         <ForecastChart id={id} />
+        <HistoryChart id={id} />
         <PhysicsChart />
         <EquipmentAlerts id={id} />
       </div>
@@ -159,8 +159,7 @@ function PhysicsChart() {
         <h2>Физическая модель против фактических показаний</h2>
       </div>
       <div className="placeholder">
-        Заглушка: появится, когда физическая модель начнёт писать в <code>physics_predictions</code> и будет готов
-        эндпоинт.
+        Заглушка
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { api } from "../api";
 import { Empty, ErrorMessage, Loading } from "../components/State";
@@ -8,6 +8,7 @@ import { useFetch } from "../useFetch";
 
 export function EquipmentList() {
   const { data, error, loading, reload } = useFetch(api.listEquipment, []);
+  const navigate = useNavigate();
 
   return (
     <section>
@@ -34,10 +35,8 @@ export function EquipmentList() {
           </thead>
           <tbody>
             {data.map((e) => (
-              <tr key={e.id}>
-                <td>
-                  <Link to={`/equipment/${e.id}`}>{e.name}</Link>
-                </td>
+              <tr key={e.id} className="row-link" onClick={() => navigate(`/equipment/${e.id}`)}>
+                <td className="name">{e.name}</td>
                 <td>
                   <StatusBadge status={e.status} />
                 </td>
