@@ -1,0 +1,12 @@
+.git
+.github
+.env
+.ruff_cache
+.DS_Store
+**/.venv
+**/__pycache__
+**/node_modules
+data_local
+data/processed
+ml/data
+frontend/dist
