@@ -58,4 +58,8 @@ if __name__ == "__main__":
         stream=sys.stdout,
     )
 
+    if not BOT_TOKEN or not CHAT_ID:
+        logger.warning("BOT_TOKEN or CHAT_ID is not set: telegram alerts are disabled")
+        sys.exit(0)
+
     get_rows_without_alert()
