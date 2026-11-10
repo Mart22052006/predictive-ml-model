@@ -90,6 +90,10 @@ jobs:
         working-directory: ml
         run: python baseline_model_check.py ../data/test_FD001.txt --rul ../data/RUL_FD001.txt
 
+      - name: Run physics check
+        working-directory: ml
+        run: python physics_check.py ../data/train_FD001.txt
+
   pipeline:
     needs: [migrations, model]
     runs-on: ubuntu-latest
@@ -154,5 +158,7 @@ jobs:
           EQ=$(psql "$PSQL_URL" -tAc "SELECT count(*) FROM equipment")
           SR=$(psql "$PSQL_URL" -tAc "SELECT count(*) FROM sensor_readings")
           ML=$(psql "$PSQL_URL" -tAc "SELECT count(*) FROM ml_predictions")
-          echo "equipment=$EQ sensor_readings=$SR ml_predictions=$ML"
-          [ "$EQ" -eq 20 ] && [ "$SR" -gt 0 ] && [ "$ML" -eq "$SR" ]
+          PH=$(psql "$PSQL_URL" -tAc "SELECT count(*) FROM physics_predictions")
+          RS=$(psql "$PSQL_URL" -tAc "SELECT count(*) FROM ml_predictions WHERE residual <> 0")
+          echo "equipment=$EQ sensor_readings=$SR ml_predictions=$ML physics_predictions=$PH nonzero_residual=$RS"
+          [ "$EQ" -eq 20 ] && [ "$SR" -gt 0 ] && [ "$ML" -eq "$SR" ] && [ "$PH" -eq "$SR" ] && [ "$RS" -gt 0 ]
