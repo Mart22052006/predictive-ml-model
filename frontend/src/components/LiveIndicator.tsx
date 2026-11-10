@@ -8,7 +8,6 @@ interface Props {
   refreshError: string | null;
 }
 
-/** «Обновлено 12:03:05» + переключатель автообновления. Ставится рядом с кнопкой «Обновить». */
 export function LiveIndicator({ updatedAt, refreshing, refreshError }: Props) {
   const auto = useAutoRefreshEnabled();
   const time = updatedAt ? formatTime(updatedAt) : "—";

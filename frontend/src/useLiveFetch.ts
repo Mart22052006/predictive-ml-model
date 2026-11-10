@@ -4,23 +4,9 @@ import { REFRESH_INTERVAL_MS, useAutoRefreshEnabled } from "./autoRefresh";
 import { isSame, nextDelay } from "./liveFetchLogic";
 
 interface LiveOptions {
-  /** Интервал опроса, мс (по умолчанию VITE_REFRESH_INTERVAL_MS или 10 000). 0 — без автообновления. */
   intervalMs?: number;
 }
 
-/**
- * Замена useFetch с автообновлением: данные подтягиваются в фоне, пока открыта страница.
- * Возвращает то же, что useFetch ({ data, error, loading, reload, setData }),
- * плюс { refreshing, updatedAt, refreshError }.
- *
- * - `loading` — только первая загрузка (в фоне экран не мигает «Загрузка…»);
- * - `reload` (кнопка «Обновить») обновляет в фоне: данные остаются на экране, `refreshing = true`;
- * - если данные не изменились, объект `data` остаётся прежним — графики не перерисовываются;
- * - вкладка скрыта — опрос на паузе, при возвращении обновляем сразу;
- * - при сбое остаются последние данные (`refreshError`), опрос замедляется до 60 с;
- * - `error` — только если данных ещё нет (первая загрузка не удалась); опрос при этом продолжается
- *   и сам восстановит экран, как только сервер ответит.
- */
 export function useLiveFetch<T>(fn: () => Promise<T>, deps: unknown[], options: LiveOptions = {}) {
   const intervalMs = options.intervalMs ?? REFRESH_INTERVAL_MS;
   const auto = useAutoRefreshEnabled();
@@ -34,7 +20,7 @@ export function useLiveFetch<T>(fn: () => Promise<T>, deps: unknown[], options: 
   const run = useCallback(fn, deps);
   const runRef = useRef(run);
   runRef.current = run;
-  const requestId = useRef(0); // номер последнего запроса: ответы от устаревших игнорируются
+  const requestId = useRef(0); 
   const failures = useRef(0);
   const timer = useRef<number | undefined>(undefined);
   const hasData = useRef(false);
@@ -63,7 +49,6 @@ export function useLiveFetch<T>(fn: () => Promise<T>, deps: unknown[], options: 
     }
   }, []);
 
-  // Первая загрузка и перезагрузка при смене зависимостей (например, другой двигатель)
   useEffect(() => {
     failures.current = 0;
     hasData.current = false;
@@ -75,7 +60,6 @@ export function useLiveFetch<T>(fn: () => Promise<T>, deps: unknown[], options: 
     };
   }, [load, run]);
 
-  // Периодический опрос
   useEffect(() => {
     if (!auto || intervalMs <= 0) return;
     let stopped = false;
