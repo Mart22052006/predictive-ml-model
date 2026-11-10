@@ -1,23 +1,26 @@
 import { useNavigate } from "react-router-dom";
 
 import { api } from "../api";
+import { LiveIndicator } from "../components/LiveIndicator";
 import { Empty, ErrorMessage, Loading } from "../components/State";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatDate, formatRul } from "../format";
-import { useFetch } from "../useFetch";
+import { useLiveFetch } from "../useLiveFetch";
 
 export function EquipmentList() {
-  const { data, error, loading, reload } = useFetch(api.listEquipment, []);
+  const { data, error, loading, reload, refreshing, updatedAt, refreshError } = useLiveFetch(api.listEquipment, []);
   const navigate = useNavigate();
 
   return (
     <section>
       <div className="page-head">
         <h1>Оборудование</h1>
-        <button className="btn btn-secondary" onClick={reload} disabled={loading}>
+        <button className="btn btn-secondary" onClick={reload} disabled={loading || refreshing}>
           Обновить
         </button>
       </div>
+
+      {data && <LiveIndicator updatedAt={updatedAt} refreshing={refreshing} refreshError={refreshError} />}
 
       {error && <ErrorMessage message={error} />}
       {loading && !data && <Loading />}

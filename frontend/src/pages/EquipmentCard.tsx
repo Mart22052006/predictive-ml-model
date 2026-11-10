@@ -15,17 +15,18 @@ import {
 
 import { api } from "../api";
 import { AlertsTable } from "../components/AlertsTable";
+import { LiveIndicator } from "../components/LiveIndicator";
 import { Empty, ErrorMessage, Loading } from "../components/State";
 import { StatusBadge } from "../components/StatusBadge";
 import { SENSORS, formatDate, formatRul } from "../format";
-import { useFetch } from "../useFetch";
+import { useLiveFetch } from "../useLiveFetch";
 
 const RUL_WARNING = 75;
 const RUL_CRITICAL = 30;
 
 export function EquipmentCard() {
   const id = Number(useParams().id);
-  const equipment = useFetch(() => api.getEquipment(id), [id]);
+  const equipment = useLiveFetch(() => api.getEquipment(id), [id]);
 
   const [recalculating, setRecalculating] = useState(false);
   const [recalcError, setRecalcError] = useState<string | null>(null);
@@ -73,6 +74,11 @@ export function EquipmentCard() {
           </button>
         </div>
       </div>
+      <LiveIndicator
+        updatedAt={equipment.updatedAt}
+        refreshing={equipment.refreshing}
+        refreshError={equipment.refreshError}
+      />
       {recalcError && <ErrorMessage message={recalcError} />}
 
       <div className="grid">
@@ -87,7 +93,7 @@ export function EquipmentCard() {
 
 function HistoryChart({ id }: { id: number }) {
   const [sensor, setSensor] = useState(SENSORS[0].code);
-  const { data, error } = useFetch(() => api.getHistory(id), [id]);
+  const { data, error } = useLiveFetch(() => api.getHistory(id), [id]);
 
   const points = (data ?? []).map((r) => ({ cycle: r.cycle, value: r.sensors[sensor] }));
 
@@ -122,7 +128,7 @@ function HistoryChart({ id }: { id: number }) {
 }
 
 function ForecastChart({ id }: { id: number }) {
-  const { data, error } = useFetch(() => api.getForecast(id), [id]);
+  const { data, error } = useLiveFetch(() => api.getForecast(id), [id]);
 
   const points = (data?.points ?? []).map((p) => ({ ...p, range: [p.rul_low, p.rul_high] }));
 
@@ -166,7 +172,7 @@ function PhysicsChart() {
 }
 
 function EquipmentAlerts({ id }: { id: number }) {
-  const { data, error } = useFetch(() => api.alertsByEquipment(id), [id]);
+  const { data, error } = useLiveFetch(() => api.alertsByEquipment(id), [id]);
 
   return (
     <div className="card">
