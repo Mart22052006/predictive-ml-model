@@ -74,6 +74,12 @@ jobs:
         working-directory: backend
         run: alembic check
 
+      - name: Test backend including authorization and physics
+        working-directory: backend
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://pdm:pdm@localhost:5432/pdm
+        run: pytest -q
+
   model:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -217,6 +223,7 @@ jobs:
             echo "RUL_WARNING=75"
             echo "RUL_CRITICAL=30"
             echo "RUL_CLIP=125"
+            python3 -c 'import secrets; print("JWT_SECRET=" + secrets.token_urlsafe(48))'
           } > .env
 
       - name: Validate docker-compose.yml
@@ -233,6 +240,22 @@ jobs:
 
       - name: Frontend is served
         run: curl -fsS -o /dev/null http://localhost:5173/
+
+      - name: Create account for API smoke
+        run: |
+          SMOKE_PASSWORD=$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')
+          echo "::add-mask::$SMOKE_PASSWORD"
+          echo "SMOKE_PASSWORD=$SMOKE_PASSWORD" >> "$GITHUB_ENV"
+          export SMOKE_PASSWORD
+          docker compose exec -T -e SMOKE_PASSWORD backend python - <<'PYTHON'
+          import os
+          from app.core.db import engine
+          from app.services.auth_service import create_user
+          with engine.connect() as db:
+              user = create_user(db, "ci.smoke", os.environ["SMOKE_PASSWORD"])
+              if user is None:
+                  raise SystemExit("Smoke-test login already exists")
+          PYTHON
 
       - name: API smoke
         run: python3 scripts/api_smoke.py http://localhost:8000 240
