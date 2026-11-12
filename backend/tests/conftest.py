@@ -11,8 +11,9 @@ os.environ["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
 os.environ["RUL_WARNING"] = "75"
 os.environ["RUL_CRITICAL"] = "30"
 os.environ["RUL_CLIP"] = "125"
+os.environ["JWT_SECRET"] = "test-secret-for-pytest-only-0123456789"
 
-TABLES = "alerts, ml_predictions, physics_predictions, sensor_readings, equipment"
+TABLES = "alerts, ml_predictions, physics_predictions, sensor_readings, equipment, users, login_attempts"
 
 
 @pytest.fixture
@@ -26,10 +27,23 @@ def db():
 
 
 @pytest.fixture
-def client(db):
+def anon_client(db):
     from main import app
 
     return TestClient(app)
+
+
+@pytest.fixture
+def client(db):
+    """Клиент вошедшего пользователя: все эндпоинты, кроме /auth, требуют токен."""
+    from app.core.security import create_token
+    from app.models import User
+    from main import app
+
+    statement = insert(User).values(login="operator", password_hash="-").returning(User.id)
+    user_id = db.execute(statement).scalar_one()
+    db.commit()
+    return TestClient(app, headers={"Authorization": f"Bearer {create_token(user_id)}"})
 
 
 @pytest.fixture
@@ -74,3 +88,29 @@ def add_reading(db):
         return sensors
 
     return add
+
+
+@pytest.fixture(scope="session")
+def password_hash():
+    from app.core.security import hash_password
+    return hash_password("Correct-pass 123!")
+
+
+@pytest.fixture
+def account(db, password_hash):
+    from app.models import User
+
+    def add(login="worker", role="employee", is_active=True):
+        row = db.execute(insert(User).values(login=login, role=role, is_active=is_active,
+                         password_hash=password_hash).returning(User.id)).scalar_one()
+        db.commit()
+        return row
+    return add
+
+
+@pytest.fixture
+def admin_client(db, account):
+    from app.core.security import create_token
+    from main import app
+    user_id = account("administrator", "admin")
+    return TestClient(app, headers={"Authorization": f"Bearer {create_token(user_id)}"})
